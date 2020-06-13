@@ -1,0 +1,119 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Creation of infrastructure to build resources for basic Data Migration.",
+  "Parameters": {
+    "DefaultVPC": {
+      "Description": "Default VPC which being used",
+      "Type": "String",
+      "Default": "vpc-994883fd",
+      "MinLength": "12",
+      "MaxLength": "20"
+    },
+    "ExistingSubnet1": {
+      "Description": "First VPC Subnet in A.Z us-west-1b which will be used",
+      "Type": "String",
+      "Default": "subnet-1d913b45",
+      "MinLength": "12",
+      "MaxLength": "20",
+    },
+    "ExistingSubnet2":{
+      "Description": "Second VPC Subnet in A.Z us-west-1c which will be used",
+      "Type": "String",
+      "Default": "subnet-b81c79dc",
+      "MinLength": "12",
+      "MaxLength": "20",
+    },
+    "DBASubnet1": {
+      "Description": "First VPC Subnet in A.Z us-west-1b which will be used",
+      "Type": "String",
+      "Default": "subnet-1d913b45",
+      "MinLength": "12",
+      "MaxLength": "20",
+    },
+    "DBASubnet2":{
+      "Description": "Second VPC Subnet in A.Z us-west-1c which will be used",
+      "Type": "String",
+      "Default": "subnet-b81c79dc",
+      "MinLength": "12",
+      "MaxLength": "20",
+    },
+    "DefaultSecurityGroup":{
+      "Description": "Default Security Group which will be used",
+      "Type": "String",
+      "Default": "sg-78c5741f",
+      "MinLength": "8",
+      "MaxLength": "20",
+    },
+  },
+
+  "Resources": {
+    "AuroraClusterParameterGroup" : {
+      "Type" : "AWS::RDS::DBClusterParameterGroup",
+      "Properties" : {
+        "Description" : "Enables bin_log prerequisites",
+        "Family" : "aurora5.6",
+        "Parameters" : {
+          "binlog_format" : "ROW",
+          "binlog_checksum" : "NONE"
+        }
+      }
+    },
+    "DBASubnetGroup" : {
+      "Type" : "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+        "DBSubnetGroupDescription" : "Subnets available for DBA Aurora",
+        "SubnetIds" : [ { "Ref" : "DBASubnet1" }, { "Ref" : "DBASubnet2" } ],
+      }
+    },
+
+    "AuroraCluster" : {
+      "Type" : "AWS::RDS::DBCluster",
+      "Properties" : {
+        "DatabaseName" : "dev_aurora56",
+        "DBClusterParameterGroupName" : { "Ref" : "AuroraClusterParameterGroup" },
+        "DBSubnetGroupName" : { "Ref" : "DBASubnetGroup" },
+        "Engine" : "aurora",
+        "VpcSecurityGroupIds"  : [ { "Ref" : "DefaultSecurityGroup" } ]
+      }
+    },
+
+    "AuroraDB" : {
+      "Type" : "AWS::RDS::DBInstance",
+      "Properties" : {
+        "DBClusterIdentifier" : { "Ref" : "AuroraCluster" },
+        "DBInstanceClass" : "db.t3.medium",
+        "DBInstanceIdentifier" : "dev-aurora56",
+        "DBSubnetGroupName" : { "Ref" : "DBASubnetGroup" },
+        "Engine" : "aurora",
+        "MultiAZ" : "false",
+        "PubliclyAccessible" : "true",
+       },
+      "DependsOn" : [ "AuroraCluster" ]
+    },
+
+    "DMSReplicationSubnetGroup" : {
+      "Type" : "AWS::DMS::ReplicationSubnetGroup",
+      "Properties" : {
+        "ReplicationSubnetGroupIdentifier" : "DMS-SubnetGrp",
+        "ReplicationSubnetGroupDescription" : "Subnets available for DMS",
+        "SubnetIds" : [ { "Ref" : "ExistingSubnet1" }, { "Ref" : "ExistingSubnet2" } ],
+      }
+    },
+    "BasicReplicationInstance": {
+      "Type": "AWS::DMS::ReplicationInstance",
+      "Properties": {
+        "ReplicationInstanceIdentifier": "basic-dms-instance",
+        "ReplicationInstanceClass": "dms.t2.small",
+        "ReplicationSubnetGroupIdentifier": {"Ref": "DMSReplicationSubnetGroup"}
+      }
+    }
+  },
+
+  "Outputs": {
+    "StackName": {
+      "Value": {
+        "Ref": "AWS::StackName"
+      }
+    }
+  }
+}
