@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cloudformation stack creation for supporting a demo of RAID Configuration on Linux.
+Parameters:
+  Ec2InstanceName:
+    Description: Instance Name
+    Type: String
+    AllowedPattern: '.*'
+    MinLength: '5'
+    MaxLength: '20'
+    ConstraintDescription: Must contain only Alphnumeric characters with a length [5, 20]
+
+Resources:
+  RaidInstanceDemo:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-004d8bf5b9ce457b7
+      KeyName: dev-test-key
+      SubnetId: subnet-1d913b45
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdm"
+          Ebs:
+            VolumeType: "gp2"
+            DeleteOnTermination: "false"
+            VolumeSize: "20"
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeType: "gp2"
+            DeleteOnTermination: "false"
+            VolumeSize: "20"
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/usr/bin/env bash
+            sudo yum update -y
+            sudo mdadm --create --verbose /dev/md0 --level=0 --name=dev-raid-demo --raid-devices=2 /dev/xvdk  /dev/xvdm
+            sudo mkfs.ext4 -L dev-raid-demo /dev/md0
+            sudo dracut -H -f /boot/initramfs-$(uname -r).img $(uname -r)
+            sudo mkdir -p /mnt/dev-raid-demo
+            sudo mount LABEL=dev-raid-demo /mnt/dev-raid-demo
+
+Outputs:
+  RaidInstanceDemo:
+    Value: !Ref 'RaidInstanceDemo'
+    Description: Demo Instance to build Redundant Array of Independent/Inexpensive Drives
