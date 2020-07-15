@@ -1,2 +1,2 @@
 # aws
-Code related to Data science Research 
+All about AWS projects. 
