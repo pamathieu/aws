@@ -1,0 +1,85 @@
+#### Remember that only the Resources section is required...
+#### Snippet links: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/CHAP_TemplateQuickRef.html
+
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+# The latest template format version is 2010-09-09 and is currently the only valid value.
+AWSTemplateFormatVersion: "2010-09-09"
+
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-description-structure.html
+# The description must be a literal string that is between 0 and 1024 bytes in length
+Description:
+  Place description here ...
+  Multiple lines are welcome.
+
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/metadata-section-structure.html
+# Information about the template. e.g Details about the resources used
+Metadata:
+  Instances:
+    Description: "info about the instances"
+  S3Buckets:
+      Description: "info about the S3 Buckets"
+
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
+# Enable you to pass arguments every time you create or update the stack.
+# the Keyword Ref will be use in the Resources and Outputs sections to call the parameters.
+# Dynamic refs: SSM, SSM-Secure, and SM. Enabling the usage of stored secret data
+Parameters:
+  ParameterName:
+    Type: String
+    Default: a-value-from-allowed-ones
+    AllowedValues:
+      - a-value
+      - another-value
+    Description: Info about the paramentesr
+    ConstraintDescription: Must specify a-value or another-value
+
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/mappings-section-structure.html
+# Just like a multi-dimensional array or a Dict to store values which can be retrieved later either in Resources and Outputs sections.
+# This is Very helpful when the script is made for multi regions and multi environments where values can be dynamically retrieved.
+# Use the intrinsic function Fn::FindInMap(MappingName, Key, Name) to get the returned Value.
+Mappings:
+  MappingName:
+    Key01:
+      Name1: Value1
+      Name2: Value2
+    Key02:
+      Name: Value02
+    Key03:
+      Name: Value03
+
+#https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/conditions-section-structure.html
+# Conditions are very handy boolean values when creating resources for multiple Envs, such as PROD, DEV, TESTING, etc ...
+# Conditions may used in the sections: Parameters, Conditions, Resources, and Outputs.
+# Conditions cannot be changed while updating the Stack without manipulating the stack's resources
+# Intrinsic functions to use: Fn::And, Fn::Equals, Fn::If, Fn::Not, Fn::Or
+Conditions:
+  Logical ID:
+    Intrinsic function
+
+# Usage of snippets as Macros either hosted by AWS CloudFormation (AWS::Include) using Yaml/Json or Lambda functions (AWS::Serverless) using AWS SAM (Serverless Application Model)
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html
+Transform:
+  Transform: [MyMacro, AWS::Serverless]
+  # Or
+  Name: 'AWS::Include'
+    Parameters:
+      Location: 's3://MyAmazonS3BucketName/MyFileName.yaml'
+
+
+# The only required section. Where the AWS resources are being defined.
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  Logical ID:
+    Type: Resource type
+    Properties:
+      Set of properties
+
+
+# 2 purposes: Values can be viewed in the CloudFormation console and also can be imported for cross-stack referenres
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
+Outputs:
+  Logical ID:
+    Description: Information about the value
+    Value: Value to return
+    Export:
+      Name: The name of the resource output to be exported for a cross-stack reference
