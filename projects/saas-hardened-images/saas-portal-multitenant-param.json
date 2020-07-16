@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "ReadCapacityUnits",
+    "ParameterValue": "5"
+  },
+  {
+    "ParameterKey": "WriteCapacityUnits",
+    "ParameterValue": "10"
+  },
+  {
+    "ParameterKey":  "Environments",
+    "ParameterValue" : "Dev"
+  }
+]

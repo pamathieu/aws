@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description:
+  AWS Resources for SaaS portal for the  Management of the Customers as Tenants (Saas-portal)
+
+Metadata:
+  Databases:
+    Description: "DynamoDB using Tenant Index Partitioning"
+  Compute:
+    Description: "Lambda, ALB, EKS"
+
+Parameters:
+  ReadCapacityUnits:
+    Description: "Provisioned read Throughput"
+    Type: Number
+    Default: 5
+    MinValue: 5
+    MaxValue: 1000
+    ConstraintDescription: "must be between 5 and 1000"
+
+  WriteCapacityUnits:
+    Description: "Provisioned write Throughput"
+    Type: Number
+    Default: 10
+    MinValue: 5
+    MaxValue: 1000
+    ConstraintDescription: "must be between 5 and 1000"
+
+  Environments:
+    Description: "Parameter Values for the Environments"
+    Type: String
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - Prod
+      - Testing
+    ConstraintDescription: "Env values must be Dev, Prod, or Testing."
+
+Mappings:
+  TenantMap:
+    TableName:
+      Dev: tenant_dev
+      Prod: tenant_prod
+      Testing: tenant_testing
+
+Conditions:
+  CreateProdResources: !Equals [ !Ref Environments, Prod ]
+
+Resources:
+  TenantTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: tenant_id
+          AttributeType: S
+        - AttributeName: create_ts
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenant_id
+          KeyType: HASH
+        - AttributeName: create_ts
+          KeyType: RANGE
+      ProvisionedThroughput:
+         ReadCapacityUnits: !Ref 'ReadCapacityUnits'
+         WriteCapacityUnits: !Ref 'WriteCapacityUnits'
+Outputs:
+  TenantTable:
+    Description: "Tenant Table"
+    Value: !Ref 'TenantTable'
